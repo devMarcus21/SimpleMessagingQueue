@@ -12,7 +12,7 @@ type LinkedList struct {
 	head *Node
 }
 
-func CreateLinkedList() LinkedList {
+func NewLinkedList() LinkedList {
 	head := Node{}
 	tail := Node{}
 
@@ -45,9 +45,9 @@ func (list *LinkedList) addBackOfList(message QueueMessage) {
 	list.size++
 }
 
-func (list *LinkedList) removeFrontOfList() QueueMessage {
+func (list *LinkedList) removeFrontOfList() (QueueMessage, bool) {
 	if list.IsEmpty() {
-		return QueueMessage{}
+		return QueueMessage{}, false
 	}
 
 	frontNode := list.head
@@ -60,14 +60,14 @@ func (list *LinkedList) removeFrontOfList() QueueMessage {
 	frontNode.prev = backNode
 
 	list.size--
-	return message
+	return message, true
 }
 
 func (list *LinkedList) Offer(message QueueMessage) {
 	list.addBackOfList(message)
 }
 
-func (list *LinkedList) Poll() QueueMessage {
+func (list *LinkedList) Poll() (QueueMessage, bool) {
 	return list.removeFrontOfList()
 }
 

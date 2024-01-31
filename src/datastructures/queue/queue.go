@@ -12,7 +12,7 @@ type QueueMessage struct {
 
 type Queue interface {
 	Offer(QueueMessage)
-	Poll() QueueMessage
+	Poll() (QueueMessage, bool)
 	Size() int
 	IsEmpty() bool
 }
