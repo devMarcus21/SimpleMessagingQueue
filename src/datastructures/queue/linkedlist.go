@@ -12,7 +12,7 @@ type LinkedList struct {
 	head *Node
 }
 
-func NewLinkedList() LinkedList {
+func NewLinkedList() *LinkedList {
 	head := Node{}
 	tail := Node{}
 
@@ -22,7 +22,7 @@ func NewLinkedList() LinkedList {
 	head.next = nil
 	head.prev = &tail
 
-	return LinkedList{
+	return &LinkedList{
 		size: 0,
 		tail: &tail,
 		head: &head,

@@ -15,7 +15,7 @@ type AsyncQueue struct {
 	queue        queuing.Queue
 	channel      chan queuing.QueueMessage
 	closeChannel chan int
-	muLock       *sync.Mutex
+	muLock       *sync.Mutex // TODO investigate this mutex lock under heavy load. Looking for how quickly/efficiently reads are handled
 }
 
 func NewAsyncQueue(queue queuing.Queue) *AsyncQueue {

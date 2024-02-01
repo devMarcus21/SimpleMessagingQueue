@@ -5,7 +5,7 @@ import (
 )
 
 type QueueMessage struct {
-	Id        uuid.UUID
+	MessageId uuid.UUID
 	Timestamp int64
 	Data      []byte
 }
