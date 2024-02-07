@@ -9,6 +9,7 @@ import (
 	dataContracts "github.com/devMarcus21/SimpleMessagingQueue/src/api/datacontracts"
 	asyncQueueUtils "github.com/devMarcus21/SimpleMessagingQueue/src/asyncqueue"
 	queueUtils "github.com/devMarcus21/SimpleMessagingQueue/src/datastructures/queue"
+	logging "github.com/devMarcus21/SimpleMessagingQueue/src/logging"
 
 	"github.com/google/uuid"
 )
@@ -39,7 +40,7 @@ func BuildSuccessfulPopResponse(message queueUtils.QueueMessage, time int64) Htt
 	}
 }
 
-func BuildHttpPushOntoQueueHandler(asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
+func BuildHttpPushOntoQueueHandler(logger logging.Logger, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
 	return func(writer http.ResponseWriter, reader *http.Request) {
 		var QueueMessageRequest dataContracts.QueueMessageRequest
 
@@ -55,13 +56,15 @@ func BuildHttpPushOntoQueueHandler(asyncQueue asyncQueueUtils.AsyncQueueWrapper)
 		epochTimeNow := time.Now().Unix()
 		queueMessage := dataContracts.ConvertQueueMessageRequestToQueueMessage(QueueMessageRequest, newMessageId, epochTimeNow)
 
+		logger.Log(newMessageId, logging.MessagePushedToQueueService, newMessageId)
+
 		asyncQueue.Offer(queueMessage)
 
 		json.NewEncoder(writer).Encode(BuildSuccessfulPushResponse(newMessageId, epochTimeNow))
 	}
 }
 
-func BuildHttpPopFromQueueHandler(asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
+func BuildHttpPopFromQueueHandler(logger logging.Logger, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
 	return func(writer http.ResponseWriter, reader *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 
@@ -73,18 +76,21 @@ func BuildHttpPopFromQueueHandler(asyncQueue asyncQueueUtils.AsyncQueueWrapper) 
 			return
 		}
 
+		logger.Log(queueMessage.MessageId, logging.MessagePulledFromQueueService, queueMessage.MessageId)
+
 		json.NewEncoder(writer).Encode(BuildSuccessfulPopResponse(queueMessage, epochTimeNow))
 	}
 }
 
 func main() {
+	logger := logging.NewEmptyLogger()
 	queue := queueUtils.NewLinkedList()
 
-	var asyncQueue asyncQueueUtils.AsyncQueueWrapper
-	asyncQueue = asyncQueueUtils.NewAsyncQueue(queue)
+	//var asyncQueue asyncQueueUtils.AsyncQueueWrapper
+	asyncQueue := asyncQueueUtils.NewAsyncQueue(queue)
 
-	http.HandleFunc("/push", BuildHttpPushOntoQueueHandler(asyncQueue))
-	http.HandleFunc("/pop", BuildHttpPopFromQueueHandler(asyncQueue))
+	http.HandleFunc("/push", BuildHttpPushOntoQueueHandler(logger, asyncQueue))
+	http.HandleFunc("/pop", BuildHttpPopFromQueueHandler(logger, asyncQueue))
 
 	log.Fatal(http.ListenAndServe(":80", nil))
 }

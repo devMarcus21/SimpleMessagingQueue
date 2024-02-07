@@ -1,2 +1,4 @@
+# Testing tools
+/loadtesting
 /main.go
-src/asyncqueue/cleanupasync.go
+/src/asyncqueue/cleanupasync.go
