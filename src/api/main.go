@@ -2,12 +2,15 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	dataContracts "github.com/devMarcus21/SimpleMessagingQueue/src/api/datacontracts"
 	asyncQueueUtils "github.com/devMarcus21/SimpleMessagingQueue/src/asyncqueue"
+	configuration "github.com/devMarcus21/SimpleMessagingQueue/src/configuration"
 	queueUtils "github.com/devMarcus21/SimpleMessagingQueue/src/datastructures/queue"
 	logging "github.com/devMarcus21/SimpleMessagingQueue/src/logging"
 
@@ -83,8 +86,16 @@ func BuildHttpPopFromQueueHandler(logger logging.Logger, asyncQueue asyncQueueUt
 }
 
 func main() {
+	// Load service configuration
+	config, err := configuration.LoadConfiguration()
+	if err != nil {
+		log.Fatal("Failed to read environment configuration file: ", err)
+	}
+
+	fmt.Println("Dev environment running: ", config.IsDevEnvironment)
+
 	logger := logging.NewEmptyLogger()
-	//logger := logging.NewInMemoryLogger()
+	// logger := logging.NewInMemoryLogger()
 	queue := queueUtils.NewLinkedList()
 
 	asyncQueue := asyncQueueUtils.NewAsyncQueue(queue)
@@ -92,7 +103,7 @@ func main() {
 	http.HandleFunc("/push", BuildHttpPushOntoQueueHandler(logger, asyncQueue))
 	http.HandleFunc("/pop", BuildHttpPopFromQueueHandler(logger, asyncQueue))
 
-	/*
+	if config.IsDevEnvironment {
 		http.HandleFunc("/logs/", func(w http.ResponseWriter, r *http.Request) {
 			id := strings.TrimPrefix(r.URL.Path, "/logs/")
 
@@ -100,7 +111,7 @@ func main() {
 
 			json.NewEncoder(w).Encode(logger.GetLogs(logId))
 		})
-	*/
+	}
 
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
