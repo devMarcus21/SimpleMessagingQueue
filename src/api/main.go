@@ -84,13 +84,23 @@ func BuildHttpPopFromQueueHandler(logger logging.Logger, asyncQueue asyncQueueUt
 
 func main() {
 	logger := logging.NewEmptyLogger()
+	//logger := logging.NewInMemoryLogger()
 	queue := queueUtils.NewLinkedList()
 
-	//var asyncQueue asyncQueueUtils.AsyncQueueWrapper
 	asyncQueue := asyncQueueUtils.NewAsyncQueue(queue)
 
 	http.HandleFunc("/push", BuildHttpPushOntoQueueHandler(logger, asyncQueue))
 	http.HandleFunc("/pop", BuildHttpPopFromQueueHandler(logger, asyncQueue))
+
+	/*
+		http.HandleFunc("/logs/", func(w http.ResponseWriter, r *http.Request) {
+			id := strings.TrimPrefix(r.URL.Path, "/logs/")
+
+			logId := uuid.MustParse(id)
+
+			json.NewEncoder(w).Encode(logger.GetLogs(logId))
+		})
+	*/
 
 	log.Fatal(http.ListenAndServe(":80", nil))
 }

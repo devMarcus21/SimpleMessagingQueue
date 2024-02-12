@@ -13,3 +13,7 @@ func NewEmptyLogger() Logger {
 }
 
 func (EmptyLogger) Log(uuid.UUID, LogName, any) {}
+
+func (EmptyLogger) GetLogs(uuid.UUID) []LogMessage {
+	return []LogMessage{}
+}
