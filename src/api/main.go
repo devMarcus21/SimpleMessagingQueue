@@ -17,29 +17,47 @@ import (
 	"github.com/google/uuid"
 )
 
-type HttpServiceResponse map[string]any
+const (
+	SuccessfulResponse        string = "Success"
+	SuccessfulResponseMessage string = "Success"
+	ErrorResponse             string = "Error"
+)
+
+type HttpServiceResponse struct {
+	Response           string
+	RequestStartedTime int64
+	Message            string
+	Payload            map[string]any
+}
 
 func BuildSuccessfulPushResponse(id uuid.UUID, time int64) HttpServiceResponse {
 	return HttpServiceResponse{
-		"status":           "success",
-		"messageId":        id.String(),
-		"epochTimeStarted": time,
+		Response:           SuccessfulResponse,
+		RequestStartedTime: time,
+		Message:            SuccessfulResponseMessage,
+		Payload: map[string]any{
+			"MessageId": id.String(),
+		},
 	}
 }
 
 func BuildQueueEmptyResponse(time int64) HttpServiceResponse {
 	return HttpServiceResponse{
-		"status":           "error",
-		"message":          "Queue is empty",
-		"epochTimeStarted": time,
+		Response:           SuccessfulResponseMessage,
+		RequestStartedTime: time,
+		Message:            "Queue is empty",
+		Payload:            map[string]any{},
 	}
 }
 
 func BuildSuccessfulPopResponse(message queueUtils.QueueMessage, time int64) HttpServiceResponse {
 	return HttpServiceResponse{
-		"status":           "success",
-		"epochTimeStarted": time,
-		"message":          message,
+		Response:           SuccessfulResponse,
+		RequestStartedTime: time,
+		Message:            SuccessfulResponseMessage,
+		Payload: map[string]any{
+			"QueueMessage": message,
+		},
 	}
 }
 
