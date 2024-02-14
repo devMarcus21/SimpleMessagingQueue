@@ -1,3 +1,6 @@
+# Build
+*.exe
+
 # Testing tools
 /loadtesting
 /main.go
