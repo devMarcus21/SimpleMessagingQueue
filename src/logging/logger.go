@@ -24,5 +24,7 @@ type Logger interface {
 	// All log rows will be stored under the same log context id along with the timestamp
 	Log(uuid.UUID, LogName, any)
 
+	// Gets log data for a specific message id
+	// Returns a list of all logs for the message id
 	GetLogs(uuid.UUID) []LogMessage
 }
