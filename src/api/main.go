@@ -43,7 +43,7 @@ func BuildSuccessfulPushResponse(id uuid.UUID, time int64) HttpServiceResponse {
 
 func BuildQueueEmptyResponse(time int64) HttpServiceResponse {
 	return HttpServiceResponse{
-		Response:           SuccessfulResponseMessage,
+		Response:           SuccessfulResponse,
 		RequestStartedTime: time,
 		Message:            "Queue is empty",
 		Payload:            map[string]any{},
