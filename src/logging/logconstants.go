@@ -7,14 +7,15 @@ const (
 	MessagePulledFromQueueService
 )
 
-var logNameToString = [...]string{
-	"MessagePushedToQueueService",
-	"MessagePulledFromQueueService",
+// Map is more verbose than using an array/slice
+var logNameToString = map[LogName]string{
+	MessagePushedToQueueService:   "MessagePushedToQueueService",
+	MessagePulledFromQueueService: "MessagePulledFromQueueService",
 }
 
-var logNameToMessageString = [...]string{
-	"Message pushed to queue service",
-	"Message pulled from queue service",
+var logNameToMessageString = map[LogName]string{
+	MessagePushedToQueueService:   "Message pushed to queue service",
+	MessagePulledFromQueueService: "Message pulled from queue service",
 }
 
 func (logName LogName) String() string {
