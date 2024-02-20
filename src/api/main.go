@@ -121,21 +121,18 @@ func main() {
 		"Starting queue service",
 		"RunningOnPort", config.Port,
 		"IsDevEnvironmentRunning", config.IsDevEnvironment,
-		"IsLoggingEnabled", config.Logging.IsEnabled)
+		"LoggerType", config.Logging.LoggerType)
 
-	loggerBuilder := logging.BuildEmptyLogger
+	var loggerBuilder logging.LoggerBuilder
 
-	if config.Logging.IsEnabled {
-		serviceLogger.Info("Logging is enabled", "LoggerType", config.Logging.LoggerType)
-
-		switch loggerType := config.Logging.LoggerType; loggerType {
-		case "text":
-			loggerBuilder = logging.BuildTextLogger
-		case "json":
-			loggerBuilder = logging.BuildJsonLogger
-		default:
-			serviceLogger.Warn("No or invalid logger type given in configuration (logging is now turned off)")
-		}
+	switch loggerType := config.Logging.LoggerType; loggerType {
+	case "text":
+		loggerBuilder = logging.BuildTextLogger
+	case "json":
+		loggerBuilder = logging.BuildJsonLogger
+	default:
+		serviceLogger.Warn("No or invalid logger type given in configuration (Defaulting to text logger)")
+		loggerBuilder = logging.BuildTextLogger
 	}
 
 	queue := queueUtils.NewLinkedList()

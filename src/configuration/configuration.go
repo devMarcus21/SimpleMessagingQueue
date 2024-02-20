@@ -12,7 +12,6 @@ const (
 )
 
 type LoggingConfiguration struct {
-	IsEnabled  bool   `json:"isEnabled"`
 	LoggerType string `json:"loggerType"` // TODO make this a strong type somehow
 }
 
@@ -44,7 +43,6 @@ func NewConfigurationWithDefaults() Configuration {
 		Port:             8080,
 		IsDevEnvironment: true,
 		Logging: LoggingConfiguration{
-			IsEnabled:  true,
 			LoggerType: "text",
 		},
 	}
