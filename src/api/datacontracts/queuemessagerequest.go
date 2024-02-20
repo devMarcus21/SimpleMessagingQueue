@@ -7,13 +7,15 @@ import (
 )
 
 type QueueMessageRequest struct {
-	Data []byte `json:"data"`
+	ProducerIdentifier string `json:"producerIdentifier"`
+	Data               []byte `json:"data"`
 }
 
 func ConvertQueueMessageRequestToQueueMessage(message QueueMessageRequest, id uuid.UUID, createdTimestamp int64) queueUtils.QueueMessage {
 	return queueUtils.QueueMessage{
-		MessageId: id,
-		Timestamp: createdTimestamp,
-		Data:      message.Data,
+		MessageId:          id,
+		ProducerIdentifier: message.ProducerIdentifier,
+		Timestamp:          createdTimestamp,
+		Data:               message.Data,
 	}
 }

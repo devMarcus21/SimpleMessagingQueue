@@ -5,9 +5,10 @@ import (
 )
 
 type QueueMessage struct {
-	MessageId uuid.UUID
-	Timestamp int64
-	Data      []byte
+	MessageId          uuid.UUID
+	ProducerIdentifier string
+	Timestamp          int64
+	Data               []byte
 }
 
 type Queue interface {
@@ -15,6 +16,7 @@ type Queue interface {
 	Offer(QueueMessage)
 
 	// Removes and returns the message at the front of the queue
+	// Returns true if a message was returned and false if not
 	Poll() (QueueMessage, bool)
 
 	// Returns the number of messages currently in the queue
