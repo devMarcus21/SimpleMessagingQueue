@@ -1,3 +1,8 @@
 {
-    "isDevEnvironment": true
+    "isDevEnvironment": true,
+    "port": 80,
+    "logging": {
+        "isEnabled": true,
+        "loggerType": "json"
+    }
 }

@@ -11,12 +11,19 @@ const (
 	ConfigurationFileName     string = "config.json"
 )
 
+type LoggingConfiguration struct {
+	IsEnabled  bool   `json:"isEnabled"`
+	LoggerType string `json:"loggerType"` // TODO make this a strong type somehow
+}
+
 type Configuration struct {
-	IsDevEnvironment bool `json:"isDevEnvironment"`
+	Port             int                  `json:"port"`
+	IsDevEnvironment bool                 `json:"isDevEnvironment"`
+	Logging          LoggingConfiguration `json:"logging"`
 }
 
 func LoadConfiguration() (Configuration, error) {
-	config := getConfigurationWithDefaults()
+	config := NewConfigurationWithDefaults()
 
 	configFile, err := os.Open(fmt.Sprintf("%s%s", ConfigurationFilePathFrom, ConfigurationFileName))
 
@@ -32,8 +39,13 @@ func LoadConfiguration() (Configuration, error) {
 }
 
 // Creates a Configuration struct and sets fields to their default values
-func getConfigurationWithDefaults() Configuration {
+func NewConfigurationWithDefaults() Configuration {
 	return Configuration{
+		Port:             8080,
 		IsDevEnvironment: true,
+		Logging: LoggingConfiguration{
+			IsEnabled:  true,
+			LoggerType: "text",
+		},
 	}
 }

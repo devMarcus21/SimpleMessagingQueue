@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"log/slog"
 	"net/http"
 	"time"
 
@@ -61,8 +60,11 @@ func BuildSuccessfulPopResponse(message queueUtils.QueueMessage, time int64) Htt
 	}
 }
 
-func BuildHttpPushOntoQueueHandler(logger *slog.Logger, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
+func BuildHttpPushOntoQueueHandler(loggerBuilder logging.LoggerBuilder, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
 	return func(writer http.ResponseWriter, reader *http.Request) {
+		requestId := uuid.New()
+		logger := loggerBuilder().With("RequestId", requestId)
+
 		var QueueMessageRequest dataContracts.QueueMessageRequest
 
 		writer.Header().Set("Content-Type", "application/json")
@@ -77,7 +79,7 @@ func BuildHttpPushOntoQueueHandler(logger *slog.Logger, asyncQueue asyncQueueUti
 		epochTimeNow := time.Now().Unix()
 		queueMessage := dataContracts.ConvertQueueMessageRequestToQueueMessage(QueueMessageRequest, newMessageId, epochTimeNow)
 
-		logger.Info(logging.MessagePushedToQueueService.Message(), "NewMessageId", newMessageId)
+		logger.Info(logging.APIPush_MessagePushedToQueueService.Message(), logging.LogIota, logging.APIPush_MessagePushedToQueueService.String(), "NewMessageId", newMessageId)
 
 		asyncQueue.Offer(queueMessage)
 
@@ -85,19 +87,23 @@ func BuildHttpPushOntoQueueHandler(logger *slog.Logger, asyncQueue asyncQueueUti
 	}
 }
 
-func BuildHttpPopFromQueueHandler(logger *slog.Logger, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
+func BuildHttpPopFromQueueHandler(loggerBuilder logging.LoggerBuilder, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
 	return func(writer http.ResponseWriter, reader *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
+
+		requestId := uuid.New()
+		logger := loggerBuilder().With("RequestId", requestId)
 
 		epochTimeNow := time.Now().Unix()
 		queueMessage, valueInQueue := asyncQueue.Poll()
 
 		if !valueInQueue {
+			logger.Info(logging.APIPop_QueueIsEmptyNoMessagePulled.Message(), logging.LogIota, logging.APIPop_QueueIsEmptyNoMessagePulled.String())
 			json.NewEncoder(writer).Encode(BuildQueueEmptyResponse(epochTimeNow))
 			return
 		}
 
-		logger.Info(logging.MessagePulledFromQueueService.Message(), "MessageId", queueMessage.MessageId)
+		logger.Info(logging.APIPop_MessagePulledFromQueueService.Message(), logging.LogIota, logging.APIPop_MessagePulledFromQueueService.String(), "PulledMessageId", queueMessage.MessageId)
 
 		json.NewEncoder(writer).Encode(BuildSuccessfulPopResponse(queueMessage, epochTimeNow))
 	}
@@ -110,17 +116,34 @@ func main() {
 		log.Fatal("Failed to read environment configuration file: ", err)
 	}
 
-	fmt.Println("Dev environment running: ", config.IsDevEnvironment)
+	serviceLogger := logging.BuildTextLogger()
+	serviceLogger.Info(
+		"Starting queue service",
+		"RunningOnPort", config.Port,
+		"IsDevEnvironmentRunning", config.IsDevEnvironment,
+		"IsLoggingEnabled", config.Logging.IsEnabled)
 
-	//logger := logging.BuildEmptyLogger()
-	logger := logging.BuildTextLogger()
+	loggerBuilder := logging.BuildEmptyLogger
+
+	if config.Logging.IsEnabled {
+		serviceLogger.Info("Logging is enabled", "LoggerType", config.Logging.LoggerType)
+
+		switch loggerType := config.Logging.LoggerType; loggerType {
+		case "text":
+			loggerBuilder = logging.BuildTextLogger
+		case "json":
+			loggerBuilder = logging.BuildJsonLogger
+		default:
+			serviceLogger.Warn("No or invalid logger type given in configuration (logging is now turned off)")
+		}
+	}
 
 	queue := queueUtils.NewLinkedList()
 
 	asyncQueue := asyncQueueUtils.NewAsyncQueue(queue)
 
-	http.HandleFunc("/push", BuildHttpPushOntoQueueHandler(logger, asyncQueue))
-	http.HandleFunc("/pop", BuildHttpPopFromQueueHandler(logger, asyncQueue))
+	http.HandleFunc("/push", BuildHttpPushOntoQueueHandler(loggerBuilder, asyncQueue))
+	http.HandleFunc("/pop", BuildHttpPopFromQueueHandler(loggerBuilder, asyncQueue))
 
-	log.Fatal(http.ListenAndServe(":80", nil))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
 }
