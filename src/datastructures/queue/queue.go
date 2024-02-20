@@ -8,7 +8,7 @@ type QueueMessage struct {
 	MessageId          uuid.UUID
 	ProducerIdentifier string
 	Timestamp          int64
-	Data               []byte
+	Data               map[string]any
 }
 
 type Queue interface {
