@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"log/slog"
 	"net/http"
-	"strings"
 	"time"
 
 	dataContracts "github.com/devMarcus21/SimpleMessagingQueue/src/api/datacontracts"
@@ -61,7 +61,7 @@ func BuildSuccessfulPopResponse(message queueUtils.QueueMessage, time int64) Htt
 	}
 }
 
-func BuildHttpPushOntoQueueHandler(logger logging.Logger, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
+func BuildHttpPushOntoQueueHandler(logger *slog.Logger, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
 	return func(writer http.ResponseWriter, reader *http.Request) {
 		var QueueMessageRequest dataContracts.QueueMessageRequest
 
@@ -77,7 +77,7 @@ func BuildHttpPushOntoQueueHandler(logger logging.Logger, asyncQueue asyncQueueU
 		epochTimeNow := time.Now().Unix()
 		queueMessage := dataContracts.ConvertQueueMessageRequestToQueueMessage(QueueMessageRequest, newMessageId, epochTimeNow)
 
-		logger.Log(newMessageId, logging.MessagePushedToQueueService, newMessageId)
+		logger.Info(logging.MessagePushedToQueueService.Message(), "NewMessageId", newMessageId)
 
 		asyncQueue.Offer(queueMessage)
 
@@ -85,7 +85,7 @@ func BuildHttpPushOntoQueueHandler(logger logging.Logger, asyncQueue asyncQueueU
 	}
 }
 
-func BuildHttpPopFromQueueHandler(logger logging.Logger, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
+func BuildHttpPopFromQueueHandler(logger *slog.Logger, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
 	return func(writer http.ResponseWriter, reader *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 
@@ -97,7 +97,7 @@ func BuildHttpPopFromQueueHandler(logger logging.Logger, asyncQueue asyncQueueUt
 			return
 		}
 
-		logger.Log(queueMessage.MessageId, logging.MessagePulledFromQueueService, queueMessage.MessageId)
+		logger.Info(logging.MessagePulledFromQueueService.Message(), "MessageId", queueMessage.MessageId)
 
 		json.NewEncoder(writer).Encode(BuildSuccessfulPopResponse(queueMessage, epochTimeNow))
 	}
@@ -112,24 +112,15 @@ func main() {
 
 	fmt.Println("Dev environment running: ", config.IsDevEnvironment)
 
-	logger := logging.NewEmptyLogger()
-	// logger := logging.NewInMemoryLogger()
+	//logger := logging.BuildEmptyLogger()
+	logger := logging.BuildTextLogger()
+
 	queue := queueUtils.NewLinkedList()
 
 	asyncQueue := asyncQueueUtils.NewAsyncQueue(queue)
 
 	http.HandleFunc("/push", BuildHttpPushOntoQueueHandler(logger, asyncQueue))
 	http.HandleFunc("/pop", BuildHttpPopFromQueueHandler(logger, asyncQueue))
-
-	if config.IsDevEnvironment {
-		http.HandleFunc("/logs/", func(w http.ResponseWriter, r *http.Request) {
-			id := strings.TrimPrefix(r.URL.Path, "/logs/")
-
-			logId := uuid.MustParse(id)
-
-			json.NewEncoder(w).Encode(logger.GetLogs(logId))
-		})
-	}
 
 	log.Fatal(http.ListenAndServe(":80", nil))
 }
