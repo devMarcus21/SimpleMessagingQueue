@@ -3,5 +3,9 @@
     "port": 80,
     "logging": {
         "loggerType": "text"
+    },
+    "batching": {
+        "maxBatchPushSize": 10,
+        "maxBatchReadSize": 10
     }
 }

@@ -19,3 +19,7 @@ func ConvertQueueMessageRequestToQueueMessage(message QueueMessageRequest, id uu
 		Data:               message.Data,
 	}
 }
+
+type BatchQueueMessageRequest struct {
+	Messages []QueueMessageRequest `json:"messages"`
+}

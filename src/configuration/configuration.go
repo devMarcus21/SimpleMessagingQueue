@@ -15,10 +15,16 @@ type LoggingConfiguration struct {
 	LoggerType string `json:"loggerType"` // TODO make this a strong type somehow
 }
 
+type BatchingConfiguration struct {
+	MaxBatchPushSize int `json:"maxBatchPushSize"`
+	MaxBatchReadSize int `json:"maxBatchReadSize"`
+}
+
 type Configuration struct {
-	Port             int                  `json:"port"`
-	IsDevEnvironment bool                 `json:"isDevEnvironment"`
-	Logging          LoggingConfiguration `json:"logging"`
+	Port             int                   `json:"port"`
+	IsDevEnvironment bool                  `json:"isDevEnvironment"`
+	Logging          LoggingConfiguration  `json:"logging"` // Can be "text" or "json"
+	Batching         BatchingConfiguration `json:"batching"`
 }
 
 func LoadConfiguration() (Configuration, error) {
@@ -44,6 +50,10 @@ func NewConfigurationWithDefaults() Configuration {
 		IsDevEnvironment: true,
 		Logging: LoggingConfiguration{
 			LoggerType: "text",
+		},
+		Batching: BatchingConfiguration{
+			MaxBatchPushSize: 10,
+			MaxBatchReadSize: 10,
 		},
 	}
 }
