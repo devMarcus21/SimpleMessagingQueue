@@ -52,14 +52,12 @@ func BuildQueueEmptyResponse(time int64) HttpServiceResponse {
 	}
 }
 
-func BuildSuccessfulPopResponse(message queueUtils.QueueMessage, time int64) HttpServiceResponse {
+func BuildSuccessfulPopResponse(time int64, responseMessage string, payload map[string]any) HttpServiceResponse {
 	return HttpServiceResponse{
 		Response:           SuccessfulResponse,
 		RequestStartedTime: time,
-		Message:            SuccessfulResponseMessage,
-		Payload: map[string]any{
-			"QueueMessage": message,
-		},
+		Message:            responseMessage,
+		Payload:            payload,
 	}
 }
 
@@ -114,7 +112,7 @@ func BuildHttpPopFromQueueHandler(loggerBuilder logging.LoggerBuilder, asyncQueu
 
 		logger.Info(logging.APIPop_MessagePulledFromQueueService.Message(), logging.LogIota, logging.APIPop_MessagePulledFromQueueService.String(), "PulledMessageId", queueMessage.MessageId)
 
-		json.NewEncoder(writer).Encode(BuildSuccessfulPopResponse(queueMessage, epochTimeNow))
+		json.NewEncoder(writer).Encode(BuildSuccessfulPopResponse(epochTimeNow, SuccessfulResponseMessage, map[string]any{"QueueMessage": queueMessage}))
 	}
 }
 
@@ -159,14 +157,7 @@ func BuildHttpBatchPushOntoQueueHandler(loggerBuilder logging.LoggerBuilder, asy
 			processedMessageIds = append(processedMessageIds, queueMessage.MessageId)
 		}
 
-		json.NewEncoder(writer).Encode(HttpServiceResponse{
-			Response:           SuccessfulResponse,
-			RequestStartedTime: epochTimeStarted,
-			Message:            fmt.Sprintf(SuccessfullyBatchMessage, len(batchQueueMessageRequest.Messages)),
-			Payload: map[string]any{
-				"MessageIds": processedMessageIds,
-			},
-		})
+		json.NewEncoder(writer).Encode(BuildSuccessfulPopResponse(epochTimeStarted, fmt.Sprintf(SuccessfullyBatchMessage, batchSize), map[string]any{"MessageIds": processedMessageIds}))
 	}
 }
 
