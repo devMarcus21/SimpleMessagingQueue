@@ -52,9 +52,18 @@ func BuildQueueEmptyResponse(time int64) HttpServiceResponse {
 	}
 }
 
-func BuildSuccessfulPopResponse(time int64, responseMessage string, payload map[string]any) HttpServiceResponse {
+func BuildSuccessfulResponse(time int64, responseMessage string, payload map[string]any) HttpServiceResponse {
 	return HttpServiceResponse{
 		Response:           SuccessfulResponse,
+		RequestStartedTime: time,
+		Message:            responseMessage,
+		Payload:            payload,
+	}
+}
+
+func BuildErrorResponse(time int64, responseMessage string, payload map[string]any) HttpServiceResponse {
+	return HttpServiceResponse{
+		Response:           ErrorResponse,
 		RequestStartedTime: time,
 		Message:            responseMessage,
 		Payload:            payload,
@@ -80,7 +89,8 @@ func BuildHttpPushOntoQueueHandler(loggerBuilder logging.LoggerBuilder, asyncQue
 		err := json.NewDecoder(reader.Body).Decode(&queueMessageRequest)
 
 		if err != nil {
-			http.Error(writer, err.Error(), http.StatusBadRequest) // TODO fix error responses to be json instead of just text
+			writer.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(writer).Encode(BuildErrorResponse(epochTimeStarted, errorResponses.JsonUnmarshalError.Message(), map[string]any{}))
 			return
 		}
 
@@ -112,7 +122,7 @@ func BuildHttpPopFromQueueHandler(loggerBuilder logging.LoggerBuilder, asyncQueu
 
 		logger.Info(logging.APIPop_MessagePulledFromQueueService.Message(), logging.LogIota, logging.APIPop_MessagePulledFromQueueService.String(), "PulledMessageId", queueMessage.MessageId)
 
-		json.NewEncoder(writer).Encode(BuildSuccessfulPopResponse(epochTimeNow, SuccessfulResponseMessage, map[string]any{"QueueMessage": queueMessage}))
+		json.NewEncoder(writer).Encode(BuildSuccessfulResponse(epochTimeNow, SuccessfulResponseMessage, map[string]any{"QueueMessage": queueMessage}))
 	}
 }
 
@@ -129,7 +139,8 @@ func BuildHttpBatchPushOntoQueueHandler(loggerBuilder logging.LoggerBuilder, asy
 
 		err := json.NewDecoder(reader.Body).Decode(&batchQueueMessageRequest)
 		if err != nil {
-			http.Error(writer, err.Error(), http.StatusBadRequest) // TODO fix error responses to be json instead of just text
+			writer.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(writer).Encode(BuildErrorResponse(epochTimeStarted, errorResponses.JsonUnmarshalError.Message(), map[string]any{}))
 			return
 		}
 
@@ -139,13 +150,18 @@ func BuildHttpBatchPushOntoQueueHandler(loggerBuilder logging.LoggerBuilder, asy
 
 		if batchSize == 0 {
 			logger.Error(errorResponses.GivenEmptyBatchError.String(), errorResponses.ApiErrorIota, errorResponses.GivenEmptyBatchError)
-			http.Error(writer, errorResponses.GivenEmptyBatchError.String(), http.StatusBadRequest) // TODO fix error responses to be json instead of just text
+
+			writer.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(writer).Encode(BuildErrorResponse(epochTimeStarted, errorResponses.GivenEmptyBatchError.Message(), map[string]any{}))
 			return
 		}
 		if batchSize > maxBatchSize {
-			logger.Error(fmt.Sprintf(errorResponses.BatchSizeBiggerThanMaxBatchSizeError.Message(), batchSize, maxBatchSize),
-				errorResponses.ApiErrorIota, errorResponses.BatchSizeBiggerThanMaxBatchSizeError)
-			http.Error(writer, errorResponses.BatchSizeBiggerThanMaxBatchSizeError.String(), http.StatusBadRequest) // TODO fix error responses to be json instead of just text
+			batchToBigError := fmt.Sprintf(errorResponses.BatchSizeBiggerThanMaxBatchSizeError.Message(), batchSize, maxBatchSize)
+
+			logger.Error(batchToBigError, errorResponses.ApiErrorIota, errorResponses.BatchSizeBiggerThanMaxBatchSizeError)
+
+			writer.WriteHeader(http.StatusBadRequest)
+			json.NewEncoder(writer).Encode(BuildErrorResponse(epochTimeStarted, batchToBigError, map[string]any{}))
 			return
 		}
 
@@ -157,7 +173,7 @@ func BuildHttpBatchPushOntoQueueHandler(loggerBuilder logging.LoggerBuilder, asy
 			processedMessageIds = append(processedMessageIds, queueMessage.MessageId)
 		}
 
-		json.NewEncoder(writer).Encode(BuildSuccessfulPopResponse(epochTimeStarted, fmt.Sprintf(SuccessfullyBatchMessage, batchSize), map[string]any{"MessageIds": processedMessageIds}))
+		json.NewEncoder(writer).Encode(BuildSuccessfulResponse(epochTimeStarted, fmt.Sprintf(SuccessfullyBatchMessage, batchSize), map[string]any{"MessageIds": processedMessageIds}))
 	}
 }
 
