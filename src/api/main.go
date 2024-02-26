@@ -70,10 +70,9 @@ func BuildErrorResponse(time int64, responseMessage string, payload map[string]a
 	}
 }
 
-func buildQueueMessageFromQueueMessageRequest(request dataContracts.QueueMessageRequest) queueUtils.QueueMessage {
+func buildQueueMessageFromQueueMessageRequest(request dataContracts.QueueMessageRequest, epochCreatedTimestamp int64) queueUtils.QueueMessage {
 	newMessageId := uuid.New()
-	epochTimeNow := time.Now().Unix()
-	return dataContracts.ConvertQueueMessageRequestToQueueMessage(request, newMessageId, epochTimeNow)
+	return dataContracts.ConvertQueueMessageRequestToQueueMessage(request, newMessageId, epochCreatedTimestamp)
 }
 
 func BuildHttpPushOntoQueueHandler(loggerBuilder logging.LoggerBuilder, asyncQueue asyncQueueUtils.AsyncQueueWrapper) func(http.ResponseWriter, *http.Request) {
@@ -94,7 +93,7 @@ func BuildHttpPushOntoQueueHandler(loggerBuilder logging.LoggerBuilder, asyncQue
 			return
 		}
 
-		queueMessage := buildQueueMessageFromQueueMessageRequest(queueMessageRequest)
+		queueMessage := buildQueueMessageFromQueueMessageRequest(queueMessageRequest, epochTimeStarted)
 
 		logger.Info(logging.APIPush_MessagePushedToQueueService.Message(), logging.LogIota, logging.APIPush_MessagePushedToQueueService.String(), "NewMessageId", queueMessage.MessageId)
 
@@ -166,8 +165,10 @@ func BuildHttpBatchPushOntoQueueHandler(loggerBuilder logging.LoggerBuilder, asy
 		}
 
 		processedMessageIds := []uuid.UUID{}
-		for _, request := range batchQueueMessageRequest.Messages {
-			queueMessage := buildQueueMessageFromQueueMessageRequest(request)
+		for batchIndex, request := range batchQueueMessageRequest.Messages {
+			queueMessage := buildQueueMessageFromQueueMessageRequest(request, epochTimeStarted)
+			queueMessage.MakeBatchedMessage(batchIndex)
+
 			asyncQueue.Offer(queueMessage)
 
 			processedMessageIds = append(processedMessageIds, queueMessage.MessageId)

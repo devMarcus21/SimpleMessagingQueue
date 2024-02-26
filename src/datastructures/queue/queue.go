@@ -4,11 +4,32 @@ import (
 	"github.com/google/uuid"
 )
 
+type BatchProperties struct {
+	isBatchedMessage bool
+	batchIndex       int // index within the batch
+}
+
 type QueueMessage struct {
 	MessageId          uuid.UUID
 	ProducerIdentifier string
 	Timestamp          int64
 	Data               map[string]any
+	batchProperties    BatchProperties
+}
+
+func (message QueueMessage) IsBatchedMessage() (bool, int) {
+	return message.batchProperties.isBatchedMessage, message.batchProperties.batchIndex
+}
+
+// Converts the given message into a message from a batch by adding batch properties to it
+func (message *QueueMessage) MakeBatchedMessage(batchIndex int) bool {
+	if message.batchProperties.isBatchedMessage {
+		return false
+	}
+	message.batchProperties.isBatchedMessage = true
+	message.batchProperties.batchIndex = batchIndex
+
+	return true
 }
 
 type Queue interface {
