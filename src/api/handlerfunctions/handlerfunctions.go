@@ -47,7 +47,6 @@ func PopMessageFromQueueHandler(requestContext HandlerRequestContext, asyncQueue
 
 	if !valueInQueue {
 		requestContext.Logger().Info(logging.APIPop_QueueIsEmptyNoMessagePulled.Message(), logging.LogIota, logging.APIPop_QueueIsEmptyNoMessagePulled.String())
-
 		requestContext.HandleResponse(buildSuccessfulResponse(requestContext.RequestStartTime(), "Queue is empty", map[string]any{}))
 		return
 	}
@@ -55,7 +54,7 @@ func PopMessageFromQueueHandler(requestContext HandlerRequestContext, asyncQueue
 	requestContext.Logger().Info(logging.APIPop_MessagePulledFromQueueService.Message(), logging.LogIota, logging.APIPop_MessagePulledFromQueueService.String(), "PulledMessageId", queueMessage.MessageId)
 
 	isBatched, batchIndex := queueMessage.IsBatchedMessage()
-	requestContext.Logger().Info("Batched message property data", "IsBatched", isBatched, "BatchedIndex", batchIndex)
+	requestContext.Logger().Info(logging.BatchMessageProperties.Message(), logging.LogIota, logging.BatchMessageProperties, "IsBatched", isBatched, "BatchedIndex", batchIndex)
 
 	requestContext.HandleResponse(
 		buildSuccessfulResponse(

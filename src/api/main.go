@@ -49,6 +49,7 @@ func main() {
 		loggerBuilder,
 		asyncQueue,
 		config,
+		logging.APIPush,
 	))
 
 	http.HandleFunc("/pop", handlers.BuildHttpHandlerFunc(
@@ -56,6 +57,7 @@ func main() {
 		loggerBuilder,
 		asyncQueue,
 		config,
+		logging.APIPop,
 	))
 
 	http.HandleFunc("/push/batch", handlers.BuildHttpHandlerFunc(
@@ -63,6 +65,7 @@ func main() {
 		loggerBuilder,
 		asyncQueue,
 		config,
+		logging.APIPPushBatch,
 	))
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))
