@@ -1,1 +1,3 @@
 # SimpleMessagingQueue
+
+SimpleMessagingQueue is a small personal project that I've been working on. The goal is to create a small in-memory message queue for service communication in a distributed system. While working on another project, I needed a system similar to this and had a hard time finding something that would work out of the box for my exact use case. Fortunately and unfortunately, there are a lot of options out there to consider however a lot of these solutions are analogous to one another from the lense of what I needed and I felt they were too "heavy" for what was required. I have always been fascinated with queue systems and decided it would be a good learning experience to build one myself.
