@@ -67,6 +67,26 @@ func (list *LinkedList) Offer(message QueueMessage) {
 	list.addBackOfList(message)
 }
 
+func (list *LinkedList) OfferAll(messages []QueueMessage) {
+	for _, message := range messages {
+		list.Offer(message)
+	}
+}
+
+func (list *LinkedList) AddFirst(message QueueMessage) {
+	frontNode := list.head
+	backNode := frontNode.prev
+	newNode := Node{message: message}
+
+	frontNode.prev = &newNode
+	backNode.next = &newNode
+
+	newNode.prev = backNode
+	newNode.next = frontNode
+
+	list.size++
+}
+
 func (list *LinkedList) Poll() (QueueMessage, bool) {
 	return list.removeFrontOfList()
 }

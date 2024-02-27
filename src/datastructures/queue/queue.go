@@ -36,6 +36,10 @@ type Queue interface {
 	// Adds a message to the back of the queue data structure
 	Offer(QueueMessage)
 
+	OfferAll([]QueueMessage)
+
+	AddFirst(QueueMessage)
+
 	// Removes and returns the message at the front of the queue
 	// Returns true if a message was returned and false if not
 	Poll() (QueueMessage, bool)
