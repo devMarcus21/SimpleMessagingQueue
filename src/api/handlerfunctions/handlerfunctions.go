@@ -25,8 +25,11 @@ func PushMessageOntoQueueHandler(requestContext HandlerRequestContext, asyncQueu
 	err := json.NewDecoder(requestContext.GetHttpBody()).Decode(&queueMessageRequest)
 
 	if err != nil {
+		requestContext.Logger().Error(errorResponses.JsonUnmarshalError.String(), errorResponses.ApiErrorIota, errorResponses.JsonUnmarshalError.String())
+		requestContext.Logger().Error(fmt.Sprintf(logging.JsonDecodeError.Message(), err.Error()), logging.LogIota, logging.JsonDecodeError.String())
+
 		requestContext.AddHttpStatusCode(http.StatusBadRequest)
-		requestContext.HandleResponse(buildErrorResponse(requestContext.RequestStartTime(), errorResponses.JsonUnmarshalError.Message(), map[string]any{}))
+		requestContext.HandleHttpResponse(buildErrorResponse(errorResponses.JsonUnmarshalError.Message(), map[string]any{}))
 		return
 	}
 
@@ -35,11 +38,7 @@ func PushMessageOntoQueueHandler(requestContext HandlerRequestContext, asyncQueu
 
 	asyncQueue.Offer(queueMessage)
 
-	requestContext.HandleResponse(
-		buildSuccessfulResponse(
-			requestContext.RequestStartTime(),
-			SuccessfulResponseMessage,
-			map[string]any{"MessageId": queueMessage.MessageId.String()}))
+	requestContext.HandleHttpResponse(buildSuccessfulResponse(SuccessfulResponseMessage, map[string]any{"MessageId": queueMessage.MessageId.String()}))
 }
 
 func PopMessageFromQueueHandler(requestContext HandlerRequestContext, asyncQueue asyncQueueUtils.AsyncQueueWrapper) {
@@ -47,7 +46,7 @@ func PopMessageFromQueueHandler(requestContext HandlerRequestContext, asyncQueue
 
 	if !valueInQueue {
 		requestContext.Logger().Info(logging.APIPop_QueueIsEmptyNoMessagePulled.Message(), logging.LogIota, logging.APIPop_QueueIsEmptyNoMessagePulled.String())
-		requestContext.HandleResponse(buildSuccessfulResponse(requestContext.RequestStartTime(), "Queue is empty", map[string]any{}))
+		requestContext.HandleHttpResponse(buildSuccessfulResponse(QueueIsEmptyMessage, map[string]any{}))
 		return
 	}
 
@@ -56,11 +55,7 @@ func PopMessageFromQueueHandler(requestContext HandlerRequestContext, asyncQueue
 	isBatched, batchIndex := queueMessage.IsBatchedMessage()
 	requestContext.Logger().Info(logging.BatchMessageProperties.Message(), logging.LogIota, logging.BatchMessageProperties, "IsBatched", isBatched, "BatchedIndex", batchIndex)
 
-	requestContext.HandleResponse(
-		buildSuccessfulResponse(
-			requestContext.RequestStartTime(),
-			SuccessfulResponseMessage,
-			map[string]any{"QueueMessage": queueMessage}))
+	requestContext.HandleHttpResponse(buildSuccessfulResponse(SuccessfulResponseMessage, map[string]any{"QueueMessage": queueMessage}))
 }
 
 func BatchPushQueueMessagesOntoQueueHandler(requestContext HandlerRequestContext, asyncQueue asyncQueueUtils.AsyncQueueWrapper) {
@@ -68,8 +63,11 @@ func BatchPushQueueMessagesOntoQueueHandler(requestContext HandlerRequestContext
 
 	err := json.NewDecoder(requestContext.GetHttpBody()).Decode(&batchQueueMessageRequest)
 	if err != nil {
+		requestContext.Logger().Error(errorResponses.JsonUnmarshalError.String(), errorResponses.ApiErrorIota, errorResponses.JsonUnmarshalError.String())
+		requestContext.Logger().Error(fmt.Sprintf(logging.JsonDecodeError.Message(), err.Error()), logging.LogIota, logging.JsonDecodeError)
+
 		requestContext.AddHttpStatusCode(http.StatusBadRequest)
-		requestContext.HandleResponse(buildErrorResponse(requestContext.epochRequestStartTime, errorResponses.JsonUnmarshalError.Message(), map[string]any{}))
+		requestContext.HandleHttpResponse(buildErrorResponse(errorResponses.JsonUnmarshalError.Message(), map[string]any{}))
 		return
 	}
 
@@ -78,10 +76,10 @@ func BatchPushQueueMessagesOntoQueueHandler(requestContext HandlerRequestContext
 	requestContext.Logger().Info(batchSizeMessage, logging.LogIota, logging.APIPushBatch_BatchSize.String())
 
 	if batchSize == 0 {
-		requestContext.Logger().Error(errorResponses.GivenEmptyBatchError.String(), errorResponses.ApiErrorIota, errorResponses.GivenEmptyBatchError)
+		requestContext.Logger().Error(errorResponses.GivenEmptyBatchError.String(), errorResponses.ApiErrorIota, errorResponses.GivenEmptyBatchError.String())
 
 		requestContext.AddHttpStatusCode(http.StatusBadRequest)
-		requestContext.HandleResponse(buildErrorResponse(requestContext.epochRequestStartTime, errorResponses.GivenEmptyBatchError.Message(), map[string]any{}))
+		requestContext.HandleHttpResponse(buildErrorResponse(errorResponses.GivenEmptyBatchError.Message(), map[string]any{}))
 		return
 	}
 
@@ -89,10 +87,10 @@ func BatchPushQueueMessagesOntoQueueHandler(requestContext HandlerRequestContext
 	if batchSize > maxBatchSize {
 		batchToBigErrorMessage := fmt.Sprintf(errorResponses.BatchSizeBiggerThanMaxBatchSizeError.Message(), batchSize, maxBatchSize)
 
-		requestContext.Logger().Error(batchToBigErrorMessage, errorResponses.ApiErrorIota, errorResponses.BatchSizeBiggerThanMaxBatchSizeError)
+		requestContext.Logger().Error(batchToBigErrorMessage, errorResponses.ApiErrorIota, errorResponses.BatchSizeBiggerThanMaxBatchSizeError.String())
 
 		requestContext.AddHttpStatusCode(http.StatusBadRequest)
-		requestContext.HandleResponse(buildErrorResponse(requestContext.epochRequestStartTime, batchToBigErrorMessage, map[string]any{}))
+		requestContext.HandleHttpResponse(buildErrorResponse(batchToBigErrorMessage, map[string]any{}))
 		return
 	}
 
@@ -107,9 +105,8 @@ func BatchPushQueueMessagesOntoQueueHandler(requestContext HandlerRequestContext
 		processedMessageIds = append(processedMessageIds, queueMessage.MessageId)
 	}
 
-	requestContext.HandleResponse(
+	requestContext.HandleHttpResponse(
 		buildSuccessfulResponse(
-			requestContext.RequestStartTime(),
 			fmt.Sprintf(SuccessfullyBatchMessage, batchSize),
 			map[string]any{"MessageIds": processedMessageIds}))
 }

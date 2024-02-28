@@ -20,6 +20,7 @@ type HandlerRequestContext struct {
 	httpWriter               http.ResponseWriter
 	httpReader               *http.Request
 	logger                   *slog.Logger
+	requestId                uuid.UUID
 	environmentConfiguration configuration.Configuration
 	epochRequestStartTime    int64
 }
@@ -30,6 +31,10 @@ func (context *HandlerRequestContext) Logger() *slog.Logger {
 
 func (context *HandlerRequestContext) GetHttpBody() io.ReadCloser {
 	return context.httpReader.Body
+}
+
+func (context *HandlerRequestContext) RequestId() uuid.UUID {
+	return context.requestId
 }
 
 func (context *HandlerRequestContext) RequestStartTime() int64 {
@@ -44,7 +49,10 @@ func (context *HandlerRequestContext) AddHttpStatusCode(httpStatusCode int) {
 	context.httpWriter.WriteHeader(httpStatusCode)
 }
 
-func (context *HandlerRequestContext) HandleResponse(response HttpServiceResponse) {
+func (context *HandlerRequestContext) HandleHttpResponse(response HttpServiceResponse) {
+	response.RequestId = context.requestId
+	response.RequestStartedTime = context.epochRequestStartTime
+
 	json.NewEncoder(context.httpWriter).Encode(response)
 }
 
@@ -53,7 +61,10 @@ func BuildHttpHandlerFunc(requestHandler func(HandlerRequestContext, asyncQueueU
 		writer.Header().Set("Content-Type", "application/json")
 
 		requestId := uuid.New()
-		logger := loggerBuilder().With("RequestId", requestId, logging.HandlerActionName.String(), handlerActionName.String())
+		logger := loggerBuilder().With( // Adds the given logging attributes to every single call to the logger
+			// Key Value
+			"RequestId", requestId,
+			logging.HandlerActionName.String(), handlerActionName.String())
 
 		epochTimeNow := time.Now().Unix()
 
@@ -61,6 +72,7 @@ func BuildHttpHandlerFunc(requestHandler func(HandlerRequestContext, asyncQueueU
 			httpWriter:               writer,
 			httpReader:               reader,
 			logger:                   logger,
+			requestId:                requestId,
 			environmentConfiguration: config,
 			epochRequestStartTime:    epochTimeNow,
 		}
