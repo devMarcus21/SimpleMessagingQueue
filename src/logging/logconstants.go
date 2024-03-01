@@ -2,9 +2,10 @@ package logging
 
 type LogEventType string
 type LogName int64
+type LogProperty string
 
 const (
-	LogIota string = "LogIota"
+	LogEventIota string = "LogEventIota"
 
 	LogEventTypeName string       = "LogEventTypeName"
 	Request          LogEventType = "Request"
@@ -13,21 +14,28 @@ const (
 	HandlerActionName LogName = iota
 	JsonDecodeError
 
-	// API Push endpoints
+	// Push Events
 	APIPush
-	APIPush_MessagePushedToQueueService
+	MessagePushedToQueueService
 
-	// API Pop endpoints
+	// Pop Events
 	APIPop
-	APIPop_MessagePulledFromQueueService
-	APIPop_QueueIsEmptyNoMessagePulled
+	MessagePulledFromQueueService
+	QueueIsEmptyNoMessagePulled
 
 	// Batching
 	BatchMessageProperties
 
-	// API Batch Push endpoints
-	APIPPushBatch
-	APIPushBatch_BatchSize
+	// Batch Push Events
+	APIPushBatch
+	PushBatchBatchSize
+
+	// Log Properties
+	NewMessageId    LogProperty = "NewMessageId"
+	PulledMessageId LogProperty = "PulledMessageId"
+
+	IsBatched    LogProperty = "IsBatched"
+	BatchedIndex LogProperty = "BatchedIndex"
 )
 
 // Map is more verbose than using an array/slice
@@ -35,38 +43,38 @@ var logNameToString = map[LogName]string{
 	HandlerActionName: "HandlerActionName",
 	JsonDecodeError:   "JsonDecodeError",
 
-	// API Push endpoints
-	APIPush:                             "APIPush",
-	APIPush_MessagePushedToQueueService: "APIPush_MessagePushedToQueueService",
+	// Push Events
+	APIPush:                     "APIPush",
+	MessagePushedToQueueService: "MessagePushedToQueueService",
 
-	// API Pop endpoints
-	APIPop:                               "APIPop",
-	APIPop_MessagePulledFromQueueService: "APIPop_MessagePulledFromQueueService",
-	APIPop_QueueIsEmptyNoMessagePulled:   "APIPop_QueueIsEmptyNoMessagePulled",
+	// Pop Events
+	APIPop:                        "APIPop",
+	MessagePulledFromQueueService: "MessagePulledFromQueueService",
+	QueueIsEmptyNoMessagePulled:   "QueueIsEmptyNoMessagePulled",
 
 	// Batching
 	BatchMessageProperties: "BatchMessageProperties",
 
-	// API Batch Push endpoints
-	APIPPushBatch:          "APIPPushBatch",
-	APIPushBatch_BatchSize: "APIPushBatch_BatchSize",
+	// Batch Push Events
+	APIPushBatch:       "APIPushBatch",
+	PushBatchBatchSize: "PushBatchBatchSize",
 }
 
 var logNameToMessageString = map[LogName]string{
 	JsonDecodeError: "JsonDecodeError: %s",
 
-	// API Push endpoints
-	APIPush_MessagePushedToQueueService: "API Push: Message pushed to queue service",
+	// Push Events
+	MessagePushedToQueueService: "Message pushed to queue service",
 
-	// API Pop endpoints
-	APIPop_MessagePulledFromQueueService: "API Pop: Message pulled from queue service",
-	APIPop_QueueIsEmptyNoMessagePulled:   "API Pop: Queue is empty",
+	// Pop Events
+	MessagePulledFromQueueService: "Message pulled from queue service",
+	QueueIsEmptyNoMessagePulled:   "Queue is empty",
 
 	// Batching
 	BatchMessageProperties: "Batched message property data",
 
-	// API Batch Push endpoints
-	APIPushBatch_BatchSize: "API Push Batch: batch size - %d",
+	// Batch Push Events
+	PushBatchBatchSize: "Push Batch: batch size - %d",
 }
 
 func (logName LogName) String() string {

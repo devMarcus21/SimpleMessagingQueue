@@ -65,7 +65,7 @@ func main() {
 		loggerBuilder,
 		asyncQueue,
 		config,
-		logging.APIPPushBatch,
+		logging.APIPushBatch,
 	))
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Port), nil))

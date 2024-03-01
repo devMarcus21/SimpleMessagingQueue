@@ -26,7 +26,7 @@ func PushMessageOntoQueueHandler(requestContext HandlerRequestContext, asyncQueu
 
 	if err != nil {
 		requestContext.Logger().Error(errorResponses.JsonUnmarshalError.String(), errorResponses.ApiErrorIota, errorResponses.JsonUnmarshalError.String())
-		requestContext.Logger().Error(fmt.Sprintf(logging.JsonDecodeError.Message(), err.Error()), logging.LogIota, logging.JsonDecodeError.String())
+		requestContext.Logger().Error(fmt.Sprintf(logging.JsonDecodeError.Message(), err.Error()), logging.LogEventIota, logging.JsonDecodeError.String())
 
 		requestContext.AddHttpStatusCode(http.StatusBadRequest)
 		requestContext.HandleHttpResponse(buildErrorResponse(errorResponses.JsonUnmarshalError.Message(), map[string]any{}))
@@ -34,7 +34,7 @@ func PushMessageOntoQueueHandler(requestContext HandlerRequestContext, asyncQueu
 	}
 
 	queueMessage := buildQueueMessageFromQueueMessageRequest(queueMessageRequest, requestContext.RequestStartTime())
-	requestContext.Logger().Info(logging.APIPush_MessagePushedToQueueService.Message(), logging.LogIota, logging.APIPush_MessagePushedToQueueService.String(), "NewMessageId", queueMessage.MessageId)
+	requestContext.Logger().Info(logging.MessagePushedToQueueService.Message(), logging.LogEventIota, logging.MessagePushedToQueueService.String(), string(logging.NewMessageId), queueMessage.MessageId)
 
 	asyncQueue.Offer(queueMessage)
 
@@ -45,15 +45,15 @@ func PopMessageFromQueueHandler(requestContext HandlerRequestContext, asyncQueue
 	queueMessage, valueInQueue := asyncQueue.Poll()
 
 	if !valueInQueue {
-		requestContext.Logger().Info(logging.APIPop_QueueIsEmptyNoMessagePulled.Message(), logging.LogIota, logging.APIPop_QueueIsEmptyNoMessagePulled.String())
+		requestContext.Logger().Info(logging.QueueIsEmptyNoMessagePulled.Message(), logging.LogEventIota, logging.QueueIsEmptyNoMessagePulled.String())
 		requestContext.HandleHttpResponse(buildSuccessfulResponse(QueueIsEmptyMessage, map[string]any{}))
 		return
 	}
 
-	requestContext.Logger().Info(logging.APIPop_MessagePulledFromQueueService.Message(), logging.LogIota, logging.APIPop_MessagePulledFromQueueService.String(), "PulledMessageId", queueMessage.MessageId)
+	requestContext.Logger().Info(logging.MessagePulledFromQueueService.Message(), logging.LogEventIota, logging.MessagePulledFromQueueService.String(), string(logging.PulledMessageId), queueMessage.MessageId)
 
 	isBatched, batchIndex := queueMessage.IsBatchedMessage()
-	requestContext.Logger().Info(logging.BatchMessageProperties.Message(), logging.LogIota, logging.BatchMessageProperties, "IsBatched", isBatched, "BatchedIndex", batchIndex)
+	requestContext.Logger().Info(logging.BatchMessageProperties.Message(), logging.LogEventIota, logging.BatchMessageProperties, string(logging.IsBatched), isBatched, string(logging.BatchedIndex), batchIndex)
 
 	requestContext.HandleHttpResponse(buildSuccessfulResponse(SuccessfulResponseMessage, map[string]any{"QueueMessage": queueMessage}))
 }
@@ -64,7 +64,7 @@ func BatchPushQueueMessagesOntoQueueHandler(requestContext HandlerRequestContext
 	err := json.NewDecoder(requestContext.GetHttpBody()).Decode(&batchQueueMessageRequest)
 	if err != nil {
 		requestContext.Logger().Error(errorResponses.JsonUnmarshalError.String(), errorResponses.ApiErrorIota, errorResponses.JsonUnmarshalError.String())
-		requestContext.Logger().Error(fmt.Sprintf(logging.JsonDecodeError.Message(), err.Error()), logging.LogIota, logging.JsonDecodeError)
+		requestContext.Logger().Error(fmt.Sprintf(logging.JsonDecodeError.Message(), err.Error()), logging.LogEventIota, logging.JsonDecodeError)
 
 		requestContext.AddHttpStatusCode(http.StatusBadRequest)
 		requestContext.HandleHttpResponse(buildErrorResponse(errorResponses.JsonUnmarshalError.Message(), map[string]any{}))
@@ -72,8 +72,8 @@ func BatchPushQueueMessagesOntoQueueHandler(requestContext HandlerRequestContext
 	}
 
 	batchSize := len(batchQueueMessageRequest.Messages)
-	batchSizeMessage := fmt.Sprintf(logging.APIPushBatch_BatchSize.Message(), batchSize)
-	requestContext.Logger().Info(batchSizeMessage, logging.LogIota, logging.APIPushBatch_BatchSize.String())
+	batchSizeMessage := fmt.Sprintf(logging.PushBatchBatchSize.Message(), batchSize)
+	requestContext.Logger().Info(batchSizeMessage, logging.LogEventIota, logging.PushBatchBatchSize.String())
 
 	if batchSize == 0 {
 		requestContext.Logger().Error(errorResponses.GivenEmptyBatchError.String(), errorResponses.ApiErrorIota, errorResponses.GivenEmptyBatchError.String())
