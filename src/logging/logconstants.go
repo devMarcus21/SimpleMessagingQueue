@@ -3,6 +3,7 @@ package logging
 type LogEventType string
 type LogEvent int64
 type LogProperty string
+type HandlerAction string
 
 const (
 	LogEventIota string = "LogEventIota"
@@ -10,16 +11,16 @@ const (
 	LogEventTypeName string       = "LogEventTypeName"
 	Request          LogEventType = "Request"
 	Service          LogEventType = "Service"
+)
 
-	HandlerActionName LogEvent = iota
-	JsonDecodeError
+// Log Events
+const (
+	JsonDecodeError LogEvent = iota
 
 	// Push Events
-	APIPush
 	MessagePushedToQueueService
 
 	// Pop Events
-	APIPop
 	MessagePulledFromQueueService
 	QueueIsEmptyNoMessagePulled
 
@@ -27,28 +28,35 @@ const (
 	BatchMessageProperties
 
 	// Batch Push Events
-	APIPushBatch
 	PushBatchBatchSize
+)
 
-	// Log Properties
-	NewMessageId    LogProperty = "NewMessageId"
-	PulledMessageId LogProperty = "PulledMessageId"
+// Log Properties
+const (
+	HandlerActionName LogProperty = "HandlerActionName"
+	NewMessageId      LogProperty = "NewMessageId"
+	PulledMessageId   LogProperty = "PulledMessageId"
+	RequestId         LogProperty = "RequestId"
 
 	IsBatched    LogProperty = "IsBatched"
 	BatchedIndex LogProperty = "BatchedIndex"
 )
 
+// Handler Actions
+const (
+	APIPush      HandlerAction = "APIPush"
+	APIPop       HandlerAction = "APIPop"
+	APIPushBatch HandlerAction = "APIPushBatch"
+)
+
 // Map is more verbose than using an array/slice
 var logNameToString = map[LogEvent]string{
-	HandlerActionName: "HandlerActionName",
-	JsonDecodeError:   "JsonDecodeError",
+	JsonDecodeError: "JsonDecodeError",
 
 	// Push Events
-	APIPush:                     "APIPush",
 	MessagePushedToQueueService: "MessagePushedToQueueService",
 
 	// Pop Events
-	APIPop:                        "APIPop",
 	MessagePulledFromQueueService: "MessagePulledFromQueueService",
 	QueueIsEmptyNoMessagePulled:   "QueueIsEmptyNoMessagePulled",
 
@@ -56,7 +64,6 @@ var logNameToString = map[LogEvent]string{
 	BatchMessageProperties: "BatchMessageProperties",
 
 	// Batch Push Events
-	APIPushBatch:       "APIPushBatch",
 	PushBatchBatchSize: "PushBatchBatchSize",
 }
 

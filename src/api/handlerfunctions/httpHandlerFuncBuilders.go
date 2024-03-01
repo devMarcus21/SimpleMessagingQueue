@@ -56,15 +56,15 @@ func (context *HandlerRequestContext) HandleHttpResponse(response HttpServiceRes
 	json.NewEncoder(context.httpWriter).Encode(response)
 }
 
-func BuildHttpHandlerFunc(requestHandler func(HandlerRequestContext, asyncQueueUtils.AsyncQueueWrapper), loggerBuilder logging.LoggerBuilder, asyncQueue asyncQueueUtils.AsyncQueueWrapper, config configuration.Configuration, handlerActionName logging.LogEvent) HandlerFunc {
+func BuildHttpHandlerFunc(requestHandler func(HandlerRequestContext, asyncQueueUtils.AsyncQueueWrapper), loggerBuilder logging.LoggerBuilder, asyncQueue asyncQueueUtils.AsyncQueueWrapper, config configuration.Configuration, handlerActionName logging.HandlerAction) HandlerFunc {
 	return func(writer http.ResponseWriter, reader *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 
 		requestId := uuid.New()
 		logger := loggerBuilder(logging.Request).With( // Adds the given logging attributes to every single call to the logger
 			// Key Value
-			"RequestId", requestId,
-			logging.HandlerActionName.String(), handlerActionName.String())
+			string(logging.RequestId), requestId,
+			string(logging.HandlerActionName), string(handlerActionName))
 
 		epochTimeNow := time.Now().Unix()
 
