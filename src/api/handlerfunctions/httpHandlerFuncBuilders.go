@@ -61,7 +61,7 @@ func BuildHttpHandlerFunc(requestHandler func(HandlerRequestContext, asyncQueueU
 		writer.Header().Set("Content-Type", "application/json")
 
 		requestId := uuid.New()
-		logger := loggerBuilder().With( // Adds the given logging attributes to every single call to the logger
+		logger := loggerBuilder(logging.Request).With( // Adds the given logging attributes to every single call to the logger
 			// Key Value
 			"RequestId", requestId,
 			logging.HandlerActionName.String(), handlerActionName.String())

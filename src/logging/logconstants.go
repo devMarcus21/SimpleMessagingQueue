@@ -1,9 +1,14 @@
 package logging
 
+type LogEventType string
 type LogName int64
 
 const (
 	LogIota string = "LogIota"
+
+	LogEventTypeName string       = "LogEventTypeName"
+	Request          LogEventType = "Request"
+	Service          LogEventType = "Service"
 
 	HandlerActionName LogName = iota
 	JsonDecodeError

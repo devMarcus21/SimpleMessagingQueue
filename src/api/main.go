@@ -19,7 +19,7 @@ func main() {
 		log.Fatal("Failed to read environment configuration file: ", err)
 	}
 
-	serviceLogger := logging.BuildTextLogger()
+	serviceLogger := logging.BuildTextLogger(logging.Service)
 	serviceLogger.Info(
 		"Starting queue service",
 		"RunningOnPort", config.Port,
