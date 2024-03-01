@@ -56,7 +56,7 @@ func (context *HandlerRequestContext) HandleHttpResponse(response HttpServiceRes
 	json.NewEncoder(context.httpWriter).Encode(response)
 }
 
-func BuildHttpHandlerFunc(requestHandler func(HandlerRequestContext, asyncQueueUtils.AsyncQueueWrapper), loggerBuilder logging.LoggerBuilder, asyncQueue asyncQueueUtils.AsyncQueueWrapper, config configuration.Configuration, handlerActionName logging.LogName) HandlerFunc {
+func BuildHttpHandlerFunc(requestHandler func(HandlerRequestContext, asyncQueueUtils.AsyncQueueWrapper), loggerBuilder logging.LoggerBuilder, asyncQueue asyncQueueUtils.AsyncQueueWrapper, config configuration.Configuration, handlerActionName logging.LogEvent) HandlerFunc {
 	return func(writer http.ResponseWriter, reader *http.Request) {
 		writer.Header().Set("Content-Type", "application/json")
 

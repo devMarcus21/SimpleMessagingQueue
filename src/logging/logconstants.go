@@ -1,7 +1,7 @@
 package logging
 
 type LogEventType string
-type LogName int64
+type LogEvent int64
 type LogProperty string
 
 const (
@@ -11,7 +11,7 @@ const (
 	Request          LogEventType = "Request"
 	Service          LogEventType = "Service"
 
-	HandlerActionName LogName = iota
+	HandlerActionName LogEvent = iota
 	JsonDecodeError
 
 	// Push Events
@@ -39,7 +39,7 @@ const (
 )
 
 // Map is more verbose than using an array/slice
-var logNameToString = map[LogName]string{
+var logNameToString = map[LogEvent]string{
 	HandlerActionName: "HandlerActionName",
 	JsonDecodeError:   "JsonDecodeError",
 
@@ -60,7 +60,7 @@ var logNameToString = map[LogName]string{
 	PushBatchBatchSize: "PushBatchBatchSize",
 }
 
-var logNameToMessageString = map[LogName]string{
+var logNameToMessageString = map[LogEvent]string{
 	JsonDecodeError: "JsonDecodeError: %s",
 
 	// Push Events
@@ -77,10 +77,10 @@ var logNameToMessageString = map[LogName]string{
 	PushBatchBatchSize: "Push Batch: batch size - %d",
 }
 
-func (logName LogName) String() string {
+func (logName LogEvent) String() string {
 	return logNameToString[logName]
 }
 
-func (logName LogName) Message() string {
+func (logName LogEvent) Message() string {
 	return logNameToMessageString[logName]
 }
