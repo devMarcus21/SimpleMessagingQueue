@@ -7,6 +7,7 @@ import (
 type BatchProperties struct {
 	isBatchedMessage bool
 	batchIndex       int // index within the batch
+	batchSize        int
 }
 
 type QueueMessage struct {
@@ -22,12 +23,13 @@ func (message QueueMessage) IsBatchedMessage() (bool, int) {
 }
 
 // Converts the given message into a message from a batch by adding batch properties to it
-func (message *QueueMessage) MakeBatchedMessage(batchIndex int) bool {
+func (message *QueueMessage) MakeBatchedMessage(batchIndex int, batchSize int) bool {
 	if message.batchProperties.isBatchedMessage {
 		return false
 	}
 	message.batchProperties.isBatchedMessage = true
 	message.batchProperties.batchIndex = batchIndex
+	message.batchProperties.batchSize = batchSize
 
 	return true
 }

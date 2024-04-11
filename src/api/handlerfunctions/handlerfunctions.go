@@ -98,9 +98,13 @@ func BatchPushQueueMessagesOntoQueueHandler(requestContext HandlerRequestContext
 
 	for batchIndex, request := range batchQueueMessageRequest.Messages {
 		queueMessage := buildQueueMessageFromQueueMessageRequest(request, requestContext.epochRequestStartTime)
-		queueMessage.MakeBatchedMessage(batchIndex)
+		queueMessage.MakeBatchedMessage(batchIndex, batchIndex)
 
 		asyncQueue.Offer(queueMessage)
+		requestContext.Logger().Info(logging.MessagePushedToQueueService.Message(),
+			logging.LogEventIota, logging.MessagePushedToQueueService.String(),
+			string(logging.NewMessageId), queueMessage.MessageId,
+			string(logging.BatchedIndex), batchIndex)
 
 		processedMessageIds = append(processedMessageIds, queueMessage.MessageId)
 	}
