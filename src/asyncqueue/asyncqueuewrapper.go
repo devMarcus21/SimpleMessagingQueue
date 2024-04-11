@@ -14,18 +14,16 @@ type AsyncQueueWrapper interface {
 }
 
 type AsyncQueue struct {
-	queue        queuing.Queue
-	channel      chan queuing.QueueMessage
-	closeChannel chan int
-	muLock       *sync.Mutex // TODO investigate this mutex lock under heavy load. Looking for how quickly/efficiently reads are handled
+	queue   queuing.Queue
+	channel chan queuing.QueueMessage
+	muLock  *sync.Mutex // TODO investigate this mutex lock under heavy load. Looking for how quickly/efficiently reads are handled
 }
 
 func NewAsyncQueue(queue queuing.Queue) *AsyncQueue {
 	queueWrapper := AsyncQueue{
-		queue:        queue,
-		channel:      make(chan queuing.QueueMessage),
-		closeChannel: make(chan int),
-		muLock:       new(sync.Mutex),
+		queue:   queue,
+		channel: make(chan queuing.QueueMessage),
+		muLock:  new(sync.Mutex),
 	}
 
 	go queueWrapper.startRunningAsync()
@@ -40,9 +38,6 @@ func (queueWrapper *AsyncQueue) startRunningAsync() {
 			queueWrapper.muLock.Lock()
 			queueWrapper.queue.Offer(message)
 			queueWrapper.muLock.Unlock()
-		case <-queueWrapper.closeChannel:
-			isChannelClosed = true
-			close(queueWrapper.channel)
 		default:
 		}
 	}
