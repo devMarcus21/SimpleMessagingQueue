@@ -10,12 +10,19 @@ type BatchProperties struct {
 	batchSize        int
 }
 
+type RetryProperties struct {
+	retries               int
+	visibleAfterTimestamp int64 // time at which this message should be available for retry
+}
+
 type QueueMessage struct {
 	MessageId          uuid.UUID
 	ProducerIdentifier string
 	Timestamp          int64
 	Data               map[string]any
+	Acknowledged       bool
 	batchProperties    BatchProperties
+	retryProperties    RetryProperties
 }
 
 func (message QueueMessage) IsBatchedMessage() (bool, int) {
@@ -32,6 +39,22 @@ func (message *QueueMessage) MakeBatchedMessage(batchIndex int, batchSize int) b
 	message.batchProperties.batchSize = batchSize
 
 	return true
+}
+
+// Get number of previous retries of the message
+func (message QueueMessage) RetryCount() int {
+	return message.retryProperties.retries
+}
+
+func (message QueueMessage) NextRetryTimestamp() int64 {
+	return message.retryProperties.visibleAfterTimestamp
+}
+
+// Indicates another retry attempt retryAvailableTimestamp will be the timestamp at which
+// this message is next available for reconsumption again
+func (message *QueueMessage) AddRetry(retryAvailableTimestamp int64) {
+	message.retryProperties.visibleAfterTimestamp = retryAvailableTimestamp
+	message.retryProperties.retries = message.retryProperties.retries + 1
 }
 
 type Queue interface {

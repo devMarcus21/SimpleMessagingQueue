@@ -8,7 +8,7 @@ import (
 
 type QueueMessageRequest struct {
 	ProducerIdentifier string         `json:"producerIdentifier"`
-	Data               map[string]any `json:"data"`
+	Data               map[string]any `json:"data"` // TODO add `Acknowledged` fields
 }
 
 func ConvertQueueMessageRequestToQueueMessage(message QueueMessageRequest, id uuid.UUID, createdTimestamp int64) queueUtils.QueueMessage {
